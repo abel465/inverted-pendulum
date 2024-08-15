@@ -1,5 +1,5 @@
 {
-  description = "pendulum";
+  description = "inverted-pendulum";
 
   inputs = {
     fenix = {
@@ -43,16 +43,35 @@
         wayland
         libxkbcommon
       ];
+      shadersCompilePath = "$HOME/.cache/rust-gpu-shaders";
     in rec {
       pendulum = rustPlatform.buildRustPackage {
-        pname = "pendulum";
+        pname = "inverted-pendulum";
         version = "0.0.0";
         src = ./.;
         cargoHash = "";
+        cargoLock.lockFile = ./Cargo.lock;
+        cargoLock.outputHashes = {
+          "rustc_codegen_spirv-0.9.0" = "sha256-uZn1p2pM5UYQKlY9u16aafPH7dfQcSG7PaFDd1sT4Qc=";
+        };
+        nativeBuildInputs = [pkgs.makeWrapper];
+        configurePhase = ''
+          export SHADERS_DIR="$out/repo/crates/runner"
+          export SHADERS_TARGET_DIR=${shadersCompilePath}
+        '';
+        fixupPhase = ''
+          cp -r . $out/repo
+          wrapProgram $out/bin/runner \
+            --set LD_LIBRARY_PATH $LD_LIBRARY_PATH:$out/lib:${nixpkgs.lib.makeLibraryPath buildInputs} \
+        '';
       };
+      packages.default = pkgs.writeShellScriptBin "pendulum" ''
+        export CARGO_TARGET_DIR="${shadersCompilePath}"
+        exec -a "$0" "${pendulum}/bin/runner" "$@"
+      '';
       apps.default = {
         type = "app";
-        program = "${pendulum}/bin/runner";
+        program = "${packages.default}/bin/pendulum";
       };
       devShell = with pkgs;
         mkShell {

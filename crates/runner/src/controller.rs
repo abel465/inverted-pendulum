@@ -1,25 +1,30 @@
 use crate::pendulum::Pendulum;
 use shared::ShaderConstants;
+use std::time::{Duration, Instant};
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
     event::{ElementState, MouseButton},
-    keyboard::Key,
+    keyboard::{Key, NamedKey},
 };
 
 pub struct Controller {
+    prev_instant: Instant,
     mouse_button_pressed: u32,
     cursor_x: f32,
     cursor_y: f32,
     pendulum: Pendulum,
+    current_direction: Option<NamedKey>,
 }
 
 impl Controller {
     pub fn new() -> Self {
         Self {
+            prev_instant: Instant::now(),
             mouse_button_pressed: 0,
             cursor_x: 0.0,
             cursor_y: 0.0,
             pendulum: Pendulum::new(),
+            current_direction: None,
         }
     }
 
@@ -36,10 +41,41 @@ impl Controller {
         self.cursor_y = position.y as f32;
     }
 
-    pub fn on_key_press(&mut self, _logical_key: Key, _state: ElementState) {}
+    pub fn on_key_press(&mut self, logical_key: Key, state: ElementState) {
+        match logical_key {
+            Key::Named(NamedKey::ArrowLeft) => {
+                if state.is_pressed() {
+                    self.current_direction = Some(NamedKey::ArrowLeft);
+                    self.pendulum.move_left();
+                } else if self
+                    .current_direction
+                    .is_some_and(|d| d == NamedKey::ArrowLeft)
+                {
+                    self.pendulum.stop();
+                }
+            }
+            Key::Named(NamedKey::ArrowRight) => {
+                if state.is_pressed() {
+                    self.current_direction = Some(NamedKey::ArrowRight);
+                    self.pendulum.move_right();
+                } else if self
+                    .current_direction
+                    .is_some_and(|d| d == NamedKey::ArrowRight)
+                {
+                    self.pendulum.stop();
+                }
+            }
+            Key::Character(str) if str == "r" => self.pendulum.reset(),
+            _ => {}
+        }
+    }
 
     pub fn update(&mut self) {
-        self.pendulum.update();
+        let max_duration = Duration::from_secs_f64(1.0 / 30.0);
+        let now = Instant::now();
+        let duration = (now - self.prev_instant).min(max_duration);
+        self.pendulum.update(duration);
+        self.prev_instant = now;
     }
 
     pub fn shader_constants(&self, window_size: PhysicalSize<u32>) -> ShaderConstants {
@@ -49,8 +85,9 @@ impl Controller {
             cursor_x: self.cursor_x,
             cursor_y: self.cursor_y,
             mouse_button_pressed: self.mouse_button_pressed,
-            position: self.pendulum.position as f32,
-            angle: self.pendulum.angle as f32,
+            cart_position_x: self.pendulum.cart_pos.x,
+            bob_position_x: self.pendulum.bob_pos.x,
+            bob_position_y: self.pendulum.bob_pos.y,
         }
     }
 }
