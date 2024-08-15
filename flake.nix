@@ -63,6 +63,7 @@
           cp -r . $out/repo
           wrapProgram $out/bin/runner \
             --set LD_LIBRARY_PATH $LD_LIBRARY_PATH:$out/lib:${nixpkgs.lib.makeLibraryPath buildInputs} \
+            --set PATH $PATH:${nixpkgs.lib.makeBinPath [rustPkg]}
         '';
       };
       packages.default = pkgs.writeShellScriptBin "pendulum" ''
