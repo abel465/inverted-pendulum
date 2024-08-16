@@ -85,9 +85,9 @@ impl Controller {
             cursor_x: self.cursor_x,
             cursor_y: self.cursor_y,
             mouse_button_pressed: self.mouse_button_pressed,
-            cart_position_x: self.pendulum.cart_pos.x,
-            bob_position_x: self.pendulum.bob_pos.x,
-            bob_position_y: self.pendulum.bob_pos.y,
+            cart_x: self.pendulum.cart_x(),
+            bob_x: self.pendulum.bob_pos().x,
+            bob_y: self.pendulum.bob_pos().y,
         }
     }
 }

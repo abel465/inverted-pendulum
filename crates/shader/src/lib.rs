@@ -13,7 +13,7 @@ fn smoothstep(a: f32, b: f32, x: f32) -> f32 {
     x * x * (3.0 - 2.0 * x)
 }
 
-fn col_cart(p: Vec2) -> Vec3 {
+fn cart_col(p: Vec2) -> Vec3 {
     let mut col = Vec3::ZERO;
 
     let attachment = sdf::disk(p, 0.03);
@@ -43,27 +43,17 @@ pub fn main_fs(
         - 0.5 * vec2(constants.width as f32, -(constants.height as f32)))
         / constants.height as f32;
 
-    let cart_pos = vec2(constants.cart_position_x, 0.0);
-    let bob_pos = vec2(constants.bob_position_x, constants.bob_position_y);
+    let cart_pos = vec2(constants.cart_x, 0.0);
+    let bob_pos = vec2(constants.bob_x, constants.bob_y);
 
-    let track_col = {
-        let d_track = sdf::capsule_x(uv, 0.6, 0.04);
-        smoothstep(0.002, 0.0, d_track.abs())
-    };
-    let bob_col = {
-        //let d_bob = sdf::disk(uv - bob_pos, 0.03);
-        Vec3::splat(smoothstep(0.002, 0.0, sdf::disk(uv - bob_pos, 0.03).abs()))
-            + Vec3::X * smoothstep(0.001, 0.0, sdf::disk(uv - bob_pos, 0.029))
-    };
-
-    let rod_col = {
-        let d_rod = sdf::capsule(uv, cart_pos, bob_pos, 0.005);
-        smoothstep(0.002, 0.0, d_rod)
-    };
+    let track_col = smoothstep(0.002, 0.0, sdf::capsule_x(uv, 0.6, 0.04).abs());
+    let bob_col = Vec3::splat(smoothstep(0.002, 0.0, sdf::disk(uv - bob_pos, 0.03).abs()))
+        + Vec3::X * smoothstep(0.001, 0.0, sdf::disk(uv - bob_pos, 0.029));
+    let rod_col = smoothstep(0.002, 0.0, sdf::capsule(uv, cart_pos, bob_pos, 0.005));
 
     let mut col = Vec3::ZERO;
     col += track_col;
-    col += col_cart(uv - cart_pos);
+    col += cart_col(uv - cart_pos);
     col += rod_col;
     if bob_col.x > bob_col.y {
         col = bob_col;

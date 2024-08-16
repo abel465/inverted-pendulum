@@ -14,7 +14,7 @@ pub struct ShaderConstants {
     /// Bit mask of the pressed buttons (0 = Left, 1 = Middle, 2 = Right).
     pub mouse_button_pressed: u32,
 
-    pub cart_position_x: f32,
-    pub bob_position_x: f32,
-    pub bob_position_y: f32,
+    pub cart_x: f32,
+    pub bob_x: f32,
+    pub bob_y: f32,
 }
