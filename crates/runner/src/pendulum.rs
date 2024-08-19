@@ -60,9 +60,8 @@ impl Pendulum {
 
         // Angular velocity
         self.bob_angvel +=
-            (dvel * self.bob_angle.cos() + GRAVITY * self.bob_angle.sin() * delta_secs) / RADIUS
-                * 0.005; // WHY DO I NEED THIS???
-        self.bob_angle += self.bob_angvel;
+            (dvel * self.bob_angle.cos() + GRAVITY * self.bob_angle.sin() * delta_secs) / RADIUS;
+        self.bob_angle += self.bob_angvel * delta_secs;
 
         // Friction
         self.bob_angvel *= 1.0 - 0.01 * delta_secs;
