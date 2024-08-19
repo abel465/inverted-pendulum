@@ -78,4 +78,12 @@ impl Pendulum {
     pub fn bob_pos(&self) -> Vec2 {
         Vec2::X * self.cart_x - Vec2::from((self.bob_angle).sin_cos()) * RADIUS
     }
+
+    pub fn bob_pos_normalized(&self) -> Vec2 {
+        Vec2::X * self.cart_x - Vec2::from((self.bob_angle).sin_cos())
+    }
+
+    pub fn angvel(&self) -> f32 {
+        self.bob_angvel
+    }
 }

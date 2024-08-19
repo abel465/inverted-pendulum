@@ -1,6 +1,12 @@
-use crate::pendulum::Pendulum;
+use crate::{
+    ml::pendulum::{set_pendulum_inputs, PendulumAgent},
+    pendulum::Pendulum,
+};
 use shared::ShaderConstants;
-use std::time::{Duration, Instant};
+use std::{
+    sync::mpsc::Receiver,
+    time::{Duration, Instant},
+};
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
     event::{ElementState, MouseButton},
@@ -9,22 +15,32 @@ use winit::{
 
 pub struct Controller {
     prev_instant: Instant,
+    current_direction: Option<NamedKey>,
     mouse_button_pressed: u32,
     cursor_x: f32,
     cursor_y: f32,
     pendulum: Pendulum,
-    current_direction: Option<NamedKey>,
+    rx: Receiver<PendulumAgent>,
+    agents: Vec<PendulumAgent>,
 }
 
 impl Controller {
     pub fn new() -> Self {
+        let (tx, rx) = std::sync::mpsc::channel();
+        let mut ml0 = crate::ml::Ml::new(tx);
+        std::thread::spawn(move || {
+            ml0.run_experiment();
+        });
+        let agent = rx.recv().unwrap();
         Self {
             prev_instant: Instant::now(),
+            current_direction: None,
             mouse_button_pressed: 0,
             cursor_x: 0.0,
             cursor_y: 0.0,
             pendulum: Pendulum::new(),
-            current_direction: None,
+            rx,
+            agents: vec![agent],
         }
     }
 
@@ -74,8 +90,18 @@ impl Controller {
         let max_duration = Duration::from_secs_f64(1.0 / 30.0);
         let now = Instant::now();
         let duration = (now - self.prev_instant).min(max_duration);
+
+        self.control_with_agent();
+
         self.pendulum.update(duration);
         self.prev_instant = now;
+    }
+
+    fn control_with_agent(&mut self) {
+        if let Ok(agent) = self.rx.try_recv() {
+            self.agents.push(agent);
+        }
+        set_pendulum_inputs(&mut self.pendulum, &mut self.agents.last_mut().unwrap());
     }
 
     pub fn shader_constants(&self, window_size: PhysicalSize<u32>) -> ShaderConstants {

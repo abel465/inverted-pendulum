@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+daggy = "0.8.0"
 wgpu = { version = "0.19.1", features = ["spirv", "vulkan-portability"] }
 bytemuck = "1.15.0"
 winit = "0.29.0"
@@ -13,6 +14,8 @@ futures = { version = "0.3", default-features = false, features = [
 ] }
 shared = { path = "../shared" }
 glam = "0.28.0"
+rand = "0.8.5"
+rayon = "1.10.0"
 
 [dependencies.spirv-builder]
 git = "https://github.com/EmbarkStudios/rust-gpu"

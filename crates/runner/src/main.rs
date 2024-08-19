@@ -1,5 +1,6 @@
 mod controller;
 mod graphics;
+mod ml;
 mod pendulum;
 
 use std::borrow::Cow;
